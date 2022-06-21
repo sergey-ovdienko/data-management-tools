@@ -1,0 +1,8 @@
+{
+  "name": "data-management-tools",
+  "version": "1.0.0",
+  "description": "Utilities for managing and persisting data in frontend applications.",
+  "main": "index.js",
+  "repository": "https://github.com/sergey-ovdienko/data-management-tools.git",
+  "license": "MIT"
+}
