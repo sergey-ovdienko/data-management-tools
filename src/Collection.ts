@@ -1,15 +1,17 @@
+import { Subscribable } from './Subscribable';
+
 export interface CollectionOptions<T extends object> {
   data: T[];
   getItemId: (item: T) => string;
   areItemsEqual?: (item1: T, item2: T) => boolean;
 }
 
-export class Collection<T extends object> {
+export class Collection<T extends object> implements Subscribable {
   private dataIds: string[] = [];
   private dataMap = new Map<string, T>();
 
-  private readonly getItemId: CollectionOptions<T>["getItemId"];
-  private readonly areItemsEqual: CollectionOptions<T>["areItemsEqual"];
+  private readonly getItemId: CollectionOptions<T>['getItemId'];
+  private readonly areItemsEqual: CollectionOptions<T>['areItemsEqual'];
 
   private autoUpdate = true;
   private updateNeeded = false;
