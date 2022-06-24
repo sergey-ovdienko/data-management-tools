@@ -40,6 +40,22 @@ describe('Collection', () => {
     expect(subscriber).toBeCalledWith([user1, user2, user3]);
   });
 
+  it('should remove previous data when setting new data', () => {
+    const user1 = makeUser('1', 'John', 'Doe');
+    const user2 = makeUser('2', 'Jack', 'Boe');
+    const user3 = makeUser('3', 'Jill', 'Joe');
+    const collection = new Collection<User>({
+      data: [user1],
+      getItemId,
+    });
+    const subscriber = jest.fn();
+    collection.subscribe(subscriber);
+    expect(subscriber).not.toBeCalled();
+    collection.setData([user1, user2, user3]);
+    expect(subscriber).toBeCalledTimes(1);
+    expect(subscriber).toBeCalledWith([user1, user2, user3]);
+  });
+
   it('should pass a snapshot to a subscriber when adding item', () => {
     const user1 = makeUser('1', 'John', 'Doe');
     const collection = new Collection<User>({
@@ -98,7 +114,7 @@ describe('Collection', () => {
     expect(subscriber).not.toBeCalled();
   });
 
-  it('should pass a snapshot to a subscriber when removing item', () => {
+  it('should pass a snapshot to a subscriber when deleting item', () => {
     const user1 = makeUser('1', 'John', 'Doe');
     const user2 = makeUser('2', 'Jack', 'Boe');
     const collection = new Collection<User>({
@@ -107,11 +123,11 @@ describe('Collection', () => {
     });
     const subscriber = jest.fn();
     collection.subscribe(subscriber);
-    collection.removeItem(user1.id);
+    collection.deleteItem(user1.id);
     expect(subscriber).toBeCalledWith([user2]);
   });
 
-  it('should do nothing when removing unknown item', () => {
+  it('should do nothing when deleting unknown item', () => {
     const user1 = makeUser('1', 'John', 'Doe');
     const user2 = makeUser('2', 'Jack', 'Boe');
     const collection = new Collection<User>({
@@ -120,7 +136,7 @@ describe('Collection', () => {
     });
     const subscriber = jest.fn();
     collection.subscribe(subscriber);
-    collection.removeItem('unknown id');
+    collection.deleteItem('unknown id');
     expect(subscriber).not.toBeCalled();
   });
 

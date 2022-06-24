@@ -28,7 +28,7 @@ export class CollectionWithContext<T extends object, C extends object>
     this.data.subscribe(this.handleDataChanges);
   }
 
-  handleDataChanges = (snapshot: T[]) => {
+  private handleDataChanges = (snapshot: T[]) => {
     this.dataSnapshot = snapshot;
   };
 
@@ -41,7 +41,7 @@ export class CollectionWithContext<T extends object, C extends object>
     };
   }
 
-  publishChanges() {
+  private publishChanges() {
     this.subscribers.forEach((subscriber) => {
       subscriber({
         data: this.dataSnapshot,
@@ -50,8 +50,10 @@ export class CollectionWithContext<T extends object, C extends object>
     });
   }
 
-  update(updater: (data: Collection<T>) => void, context?: Partial<C>) {
-    updater(this.data);
+  update(updater?: (data: Collection<T>) => void, context?: Partial<C>) {
+    if (updater) {
+      updater(this.data);
+    }
     if (context) {
       this.context = {
         ...this.context,

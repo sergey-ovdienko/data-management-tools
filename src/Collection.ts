@@ -44,7 +44,7 @@ export class Collection<T extends object> implements Subscribable {
     return this.updateNeeded;
   }
 
-  markForUpdate() {
+  private markForUpdate() {
     this.setUpdateNeeded(true);
     if (this.isAutoUpdateEnabled()) {
       this.performUpdate();
@@ -61,7 +61,7 @@ export class Collection<T extends object> implements Subscribable {
     });
   }
 
-  performUpdate() {
+  private performUpdate() {
     if (!this.isUpdateNeeded()) {
       return;
     }
@@ -83,6 +83,8 @@ export class Collection<T extends object> implements Subscribable {
 
   setData(data: T[]) {
     this.setAutoUpdate(false);
+    this.dataIds = [];
+    this.dataMap = new Map<string, T>();
     data.forEach((item) => {
       this.addItem(item);
     });
@@ -113,7 +115,7 @@ export class Collection<T extends object> implements Subscribable {
     return true;
   }
 
-  removeItem(id: string) {
+  deleteItem(id: string) {
     const itemIndex = this.dataIds.indexOf(id);
     if (itemIndex < 0) {
       return;
