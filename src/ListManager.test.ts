@@ -1,9 +1,7 @@
-import {
-  DataManagerStatus,
-  ListManager,
-  ListNetworkManager,
-  ListStoreManager,
-} from './ListManager';
+import { ListManager } from './ListManager';
+import { ListStoreManager } from './ListStoreManager';
+import { ListNetworkManager } from './ListNetworkManager';
+import { DataManagerStatus } from './DataManagerStatus';
 
 type Organization = {
   id: string;
@@ -84,7 +82,7 @@ describe('ListManager', () => {
   });
 
   it('should call storeManager to set initialData if it was passed', () => {
-    const dm = new ListManager<Organization>({
+    new ListManager<Organization>({
       getItemId: (item) => item.id,
       storeManager,
       networkManager,

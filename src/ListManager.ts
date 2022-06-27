@@ -1,28 +1,12 @@
-import { CollectionWithContext } from './CollectionWithContext';
 import { CollectionOptions } from './Collection';
 import { Subscribable } from './Subscribable';
+import { ListResultSet } from './ListResultSet';
+import { ListNetworkManager } from './ListNetworkManager';
+import { ListStoreManager } from './ListStoreManager';
+import { DataManagerStatus } from './DataManagerStatus';
 
-export enum DataManagerStatus {
-  NotInitialized = 'not_initialized',
-  Initializing = 'initializing',
-  Stale = 'stale',
-  Fresh = 'fresh',
-}
-
-export type ListManagerContext = {
+export interface ListManagerContext {
   status: DataManagerStatus;
-};
-
-export interface ListStoreManager<T> {
-  getData(): Promise<T[]>;
-  setData(data: T[]): Promise<void>;
-  addItem(item: T): Promise<void>;
-  updateItem(item: T): Promise<void>;
-  deleteItem(itemId: string): Promise<void>;
-}
-
-export interface ListNetworkManager<T> {
-  getData(): Promise<T[]>;
 }
 
 export interface ListManagerOptions<T extends object>
@@ -33,12 +17,13 @@ export interface ListManagerOptions<T extends object>
   networkManager: ListNetworkManager<T>;
 }
 
-export class ListManager<T extends object> implements Subscribable {
-  private autoInit: boolean;
-  private storeManager: ListStoreManager<T>;
+export class ListManager<T extends object>
+  extends ListResultSet<T, ListManagerContext>
+  implements Subscribable
+{
+  private ready = false;
   private networkManager: ListNetworkManager<T>;
   private status: DataManagerStatus;
-  private resultSet: CollectionWithContext<T, ListManagerContext>;
 
   constructor(options: ListManagerOptions<T>) {
     const {
@@ -48,23 +33,25 @@ export class ListManager<T extends object> implements Subscribable {
       networkManager,
       ...collectionOptions
     } = options;
-    this.storeManager = storeManager;
-    this.networkManager = networkManager;
-    this.status = initialData
+    const status = initialData
       ? DataManagerStatus.Fresh
       : DataManagerStatus.NotInitialized;
-    this.resultSet = new CollectionWithContext<T, ListManagerContext>({
+    super({
+      storeManager,
       data: initialData ?? [],
-      context: this.getContext(),
+      context: {
+        status,
+      },
       ...collectionOptions,
     });
+    this.networkManager = networkManager;
+    this.status = status;
     if (!initialData) {
-      this.autoInit = autoInit ?? false;
-      if (this.autoInit) {
+      if (autoInit) {
         this.init();
       }
     } else {
-      this.autoInit = true;
+      this.ready = true;
       this.storeManager.setData(initialData);
     }
   }
@@ -72,8 +59,7 @@ export class ListManager<T extends object> implements Subscribable {
   subscribe(
     subscriber: (snapshot: { data: T[]; context: ListManagerContext }) => void
   ) {
-    if (!this.autoInit) {
-      this.autoInit = true;
+    if (!this.ready) {
       this.init();
     }
     return this.resultSet.subscribe(subscriber);
@@ -91,6 +77,7 @@ export class ListManager<T extends object> implements Subscribable {
   }
 
   private async init() {
+    this.ready = true;
     this.resultSet.update(
       undefined,
       this.setContext(DataManagerStatus.Initializing)
@@ -106,29 +93,5 @@ export class ListManager<T extends object> implements Subscribable {
       collection.setData(networkData);
     }, this.setContext(DataManagerStatus.Fresh));
     await this.storeManager.setData(networkData);
-  }
-
-  async addItem(item: T) {
-    this.resultSet.update((collection) => {
-      collection.addItem(item);
-    });
-    await this.storeManager.addItem(item);
-  }
-
-  async updateItem(id: string, item: T) {
-    let wasUpdated = false;
-    this.resultSet.update((collection) => {
-      wasUpdated = collection.updateItem(id, item);
-    });
-    if (wasUpdated) {
-      await this.storeManager.updateItem(item);
-    }
-  }
-
-  async deleteItem(id: string) {
-    this.resultSet.update((collection) => {
-      collection.deleteItem(id);
-    });
-    await this.storeManager.deleteItem(id);
   }
 }
